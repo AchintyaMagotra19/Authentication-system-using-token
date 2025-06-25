@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Auth Website</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      async function checkAuth() {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          // Not logged in
+          document.getElementById("auth-section").style.display = "block";
+          document.getElementById("user-section").style.display = "none";
+          return;
+        }
+
+        try {
+          const response = await axios.get("http://localhost:3000/me", {
+            headers: {
+              token: token,
+            },
+          });
+
+          // Valid token, show user info
+          document.getElementById("username-info").innerText =
+            "Welcome, " + response.data.username;
+          document.getElementById("auth-section").style.display = "none";
+          document.getElementById("user-section").style.display = "block";
+        } catch (err) {
+          // Invalid token
+          localStorage.removeItem("token");
+          document.getElementById("auth-section").style.display = "block";
+          document.getElementById("user-section").style.display = "none";
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        alert("Logged out!");
+        location.reload();
+      }
+
+      async function signup() {
+        const username = document.getElementById("signup-username").value;
+        const password = document.getElementById("signup-password").value;
+
+        await axios.post("http://localhost:3000/signup", {
+          username,
+          password,
+        });
+        alert("Signed up! Now you can sign in.");
+      }
+
+      async function signin() {
+        const username = document.getElementById("signin-username").value;
+        const password = document.getElementById("signin-password").value;
+
+        const response = await axios.post("http://localhost:3000/signin", {
+          username,
+          password,
+        });
+
+        localStorage.setItem("token", response.data.token);
+        location.reload(); 
+      }
+
+      window.onload = checkAuth;
+    </script>
+  </head>
+  <body>
+    <h1>Simple Auth Website</h1>
+
+    <!-- Section for SignUp and SignIn -->
+    <div id="auth-section" style="display: none;">
+      <h3>Signup</h3>
+      <input id="signup-username" type="text" placeholder="Username" />
+      <input id="signup-password" type="password" placeholder="Password" />
+      <button onclick="signup()">Sign Up</button>
+
+      <h3>Signin</h3>
+      <input id="signin-username" type="text" placeholder="Username" />
+      <input id="signin-password" type="password" placeholder="Password" />
+      <button onclick="signin()">Sign In</button>
+    </div>
+
+    <!-- Section for Logged-in User Info -->
+    <div id="user-section" style="display: none;">
+      <h3 id="username-info">Welcome!</h3>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </body>
+</html>
